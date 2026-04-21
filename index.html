@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChunkScout - AIchemy Lab Edition</title>
+
+    <!-- PWA basics -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#8B5CF6">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --purple: #8B5CF6;
+            --cyan: #06B6D4;
+            --green: #10B981;
+            --red: #EF4444;
+            --Gold: #F59E0B;
+            --bg-gradient: linear-gradient(135deg, #F0F9FF 0%, #F5F3FF 50%, #FAF5FF 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 2rem;
+            color: #1F2937;
+        }
+
+        /* App Header (lab branding + install) */
+        .app-header {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+
+        .header-branding {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            pointer-events: auto;
+        }
+
+        .header-branding .lab-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--purple);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .header-branding .tool-type {
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #6B7280;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            pointer-events: auto;
+        }
+
+        .btn-install {
+            padding: 0.5rem 1rem;
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--purple);
+            border-radius: 999px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn-install:hover {
+            background: var(--purple);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+        }
+
+        .btn-install[hidden] {
+            display: none !important;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 80px auto 0;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--purple) 0%, var(--cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .app-slogan {
+            text-align: center;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #4B5563;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: #6B7280;
+            text-align: center;
+            font-size: 1.05rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-section {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid #E5E7EB;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--purple);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        button {
+            padding: 1rem 2rem;
+            background: var(--purple);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button:hover {
+            background: #7C3AED;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Feed Management Section */
+        .Feed-management {
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .Feed-management h3 {
+            font-size: 1rem;
+            color: var(--purple);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .Feed-List {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .Feed-Item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #E5E7EB;
+            transition: all 0.2s;
+        }
+
+        .Feed-Item:hover {
+            border-color: var(--cyan);
+            transform: translateX(2px);
+        }
+
+        .FeedItem-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .Feed-name {
+            font-weight: 600;
+            color: #1F2937;
+            font-size: 0.95rem;
+        }
+
+        .Feed-url {
+            font-size: 0.8rem;
+            color: #6B7280;
+            font-family: 'JetBrains Mono', monospace;
+            word-break: break-all;
+        }
+
+        .Feed-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-remove {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+        }
+
+        .btn-remove:hover {
+            background: var(--red);
+            color: white;
+        }
+
+        .btn-toggle {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--green);
+        }
+
+        .btn-toggle:hover {
+            background: var(--green);
+            color: white;
+        }
+
+        .Add-Feed-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .Add-Feed-form input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #E5E7EB;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .Add-Feed-form button {
+            padding: 0.75rem 1.5rem;
+            white-space: nowrap;
+        }
+
+        .Loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .Loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(139, 92, 246, 0.2);
+            border-top-color: var(--purple);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .Results {
+            display: none;
+        }
+
+        .Results.active {
+            display: block;
+        }
+
+        .Result-card {
+            background: white;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--green);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .Result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        .Result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .Source-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--green);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .Result-date {
+            font-size: 0.8rem;
+            color: #9CA3AF;
+        }
+
+        .Result-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .Result-text {
+            color: #4B5563;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        mark {
+            background: linear-gradient(120deg, #FEF3C7 0%, #FDE68A 100%);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            color: #92400E;
+        }
+
+        .Result-link {
+            color: var(--cyan);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+
+        .Result-link:hover {
+            color: var(--purple);
+        }
+
+        .Stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: rgba(255,255,255,0.5);
+            border-radius: 8px;
+        }
+
+        .Stat {
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .Stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .Stat-label {
+            font-size: 0.75rem;
+            color: #6B7280;
+        }
+
+        .Empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #9CA3AF;
+        }
+
+        .Footer-branding {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            margin-top: 2rem;
+            color: #9CA3AF;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            border-top: 1px solid rgba(0,0,0,0.05);
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .app-header {
+                position: static;
+                margin-bottom: 0.5rem;
+            }
+
+            .container {
+                margin-top: 0.5rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .Feed-actions {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .Add-Feed-form {
+                flex-direction: column;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .app-slogan {
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+    <base target="_blank">
+</head>
+<body>
+    <!-- App Header: branding + install button -->
+    <header class="app-header">
+        <div class="header-branding">
+            <span class="lab-name">AIchemy Lab's</span>
+            <span class="tool-type">Didactic Tools</span>
+        </div>
+        <div class="header-actions">
+            <button id="pwa-install-button" class="btn-install" hidden>
+                <span>⬇️</span>
+                <span>Install app</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1>🔍 ChunkScout</h1>
+        <p class="app-slogan">Ideas Into Innovations = I3</p>
+        <p class="subtitle">Find real-world usage of lexical chunks in authentic news contexts</p>
+
+        <div class="search-section">
+            <div class="input-group">
+                <input type="text" id="chunkInput" placeholder="Enter a chunk (e.g., 'take for granted')">
+                <button onclick="searchChunk()" id="searchBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <defs>
+                            <linearGradient id="glassGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)" />
+                                <stop offset="50%" style="stop-color:rgba(139,92,246,0.2)" />
+                                <stop offset="100%" style="stop-color:rgba(255,255,255,0.3)" />
+                            </linearGradient>
+                        </defs>
+                        <circle cx="11" cy="11" r="9" stroke="url(#glassGradient)" stroke-width="1" fill="rgba(255,255,255,0.15)"></circle>
+                        <circle cx="11" cy="11" r="5" stroke="rgba(255,255,255,0.8)" stroke-width="1.5" fill="none"></circle>
+                        <path d="M21 21 l-4.35 -4.35" stroke="url(#glassGradient)" stroke-width="2" stroke-linecap="round"></path>
+                    </svg>
+                    Search
+                </button>
+            </div>
+        </div>
+
+        <!-- Feed Management Section -->
+        <div class="Feed-management">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 6H20M4 12H20M4 18H20"></path>
+                </svg>
+                Manage RSS Feeds
+            </h3>
+
+            <div class="Feed-List" id="FeedList"></div>
+
+            <div class="Add-Feed-form" id="addFeedForm">
+                <input type="text" id="NewFeedName" placeholder="Feed Name (e.g., Reuters)">
+                <input type="text" id="NewFeedUrl" placeholder="RSS URL (e.g., https://...)">
+                <button class="btn-small btn-toggle" onclick="addFeed()">Add Feed</button>
+            </div>
+        </div>
+
+        <div class="Loading" id="loading">
+            <div class="spinner"></div>
+            <p>Searching RSS feeds...</p>
+        </div>
+
+        <div class="Results" id="Results">
+            <div class="Stats" id="stats"></div>
+            <div id="ResultsList"></div>
+        </div>
+    </div>
+
+    <footer class="Footer-branding">
+        <p>AIchemy Lab © 2026</p>
+    </footer>
+
+    <script>
+        // --- PWA INSTALL HANDLING ---
+        let deferredPrompt = null;
+        const installButton = document.getElementById('pwa-install-button');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installButton.hidden = false;
+        });
+
+        installButton.addEventListener('click', async () => {
+            if (!deferredPrompt) return;
+            installButton.disabled = true;
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            installButton.hidden = true;
+            installButton.disabled = false;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            installButton.hidden = true;
+        });
+
+        // --- MODE DETECTION: browser vs PWA ---
+        function isInStandaloneMode() {
+            return window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true;
+        }
+
+        // Default RSS Feeds
+        const DEFAULT_FEEDS = [
+            { name: 'BBC News', url: 'http://feeds.bbci.co.uk/news/rss.xml', enabled: true },
+            { name: 'BBC World', url: 'http://feeds.bbci.co.uk/news/world/rss.xml', enabled: true },
+            { name: 'CNN Top Stories', url: 'http://rss.cnn.com/rss/edition.rss', enabled: true },
+            { name: 'VOA News', url: 'https://www.voanews.com/api/ztq$gtepv', enabled: true },
+            { name: 'The Guardian', url: 'https://www.theguardian.com/uk/rss', enabled: true },
+            { name: 'Al Jazeera', url: 'https://www.aljazeera.com/xml/rss/all.xml', enabled: true },
+            { name: 'NPR News', url: 'https://feeds.npr.org/1001/rss.xml', enabled: true }
+        ];
+
+        // CORS Proxy rotation with modes
+        const CORS_PROXIES = [
+            {
+                name: 'allorigins-json',
+                buildUrl: (target) => `https://api.allorigins.win/get?url=${encodeURIComponent(target)}`,
+                mode: 'allorigins-json'
+            },
+            {
+                name: 'codetabs-raw',
+                buildUrl: (target) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(target)}`,
+                mode: 'raw-text'
+            },
+            {
+                name: 'corsproxy-raw',
+                buildUrl: (target) => `https://corsproxy.io/?${encodeURIComponent(target)}`,
+                mode: 'raw-text'
+            }
+        ];
+        let currentProxyIndex = 0;
+
+        function getCorsProxy() {
+            return CORS_PROXIES[currentProxyIndex];
+        }
+
+        function rotateProxy() {
+            currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
+        }
+
+        function loadFeeds() {
+            const stored = localStorage.getItem('chunkscout_feeds');
+            return stored ? JSON.parse(stored) : [...DEFAULT_FEEDS];
+        }
+
+        function saveFeeds(feeds) {
+            localStorage.setItem('chunkscout_feeds', JSON.stringify(feeds));
+        }
+
+        let RSS_FEEDS = loadFeeds();
+
+        function highlightChunk(text, chunk) {
+            if (!text || !chunk) return text;
+            const escapedChunk = chunk.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const regex = new RegExp(`(${escapedChunk})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+
+        function renderFeedList() {
+            const FeedList = document.getElementById('FeedList');
+            const standalone = isInStandaloneMode();
+
+            FeedList.innerHTML = RSS_FEEDS.map((feed, index) => `
+                <div class="Feed-Item">
+                    <div class="FeedItem-info">
+                        <span class="Feed-name">${feed.name}</span>
+                        ${!standalone ? `<span class="Feed-url">${feed.url}</span>` : ''}
+                    </div>
+                    <div class="Feed-actions">
+                        <button class="btn-small btn-toggle" onclick="toggleFeed(${index})">
+                            ${feed.enabled ? 'Disable' : 'Enable'}
+                        </button>
+                        <button class="btn-small btn-remove" onclick="removeFeed(${index})">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleFeed(index) {
+            RSS_FEEDS[index].enabled = !RSS_FEEDS[index].enabled;
+            saveFeeds(RSS_FEEDS);
+            renderFeedList();
+        }
+
+        function removeFeed(index) {
+            RSS_FEEDS.splice(index, 1);
+            saveFeeds(RSS_FEEDS);
+            renderFeedList();
+        }
+
+        function addFeed() {
+            const nameInput = document.getElementById('NewFeedName');
+            const urlInput = document.getElementById('NewFeedUrl');
+
+            const name = nameInput.value.trim();
+            const url = urlInput.value.trim();
+
+            if (!name || !url) {
+                alert('Please enter both name and URL');
+                return;
+            }
+
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                alert('Please enter a valid URL starting with http:// or https://');
+                return;
+            }
+
+            RSS_FEEDS.push({ name, url, enabled: true });
+            saveFeeds(RSS_FEEDS);
+            renderFeedList();
+
+            nameInput.value = '';
+            urlInput.value = '';
+        }
+
+        async function fetchRSSFeed(feed) {
+            if (!feed.enabled) return [];
+
+            const proxy = getCorsProxy();
+            const proxyUrl = proxy.buildUrl(feed.url);
+
+            try {
+                const response = await fetch(proxyUrl);
+
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch via ${proxy.name}: ${response.status}`);
+                }
+
+                let text;
+                if (proxy.mode === 'allorigins-json') {
+                    const data = await response.json();
+                    text = data.contents;
+                } else {
+                    text = await response.text();
+                }
+
+                const parser = new DOMParser();
+                const xml = parser.parseFromString(text, 'text/xml');
+
+                const items = xml.querySelectorAll('item');
+                const articles = [];
+
+                items.forEach((item, index) => {
+                    if (index >= 5) return;
+
+                    const title = item.querySelector('title')?.textContent || '';
+                    const description = item.querySelector('description')?.textContent || '';
+                    const link = item.querySelector('link')?.textContent || '';
+                    const pubDate = item.querySelector('pubDate')?.textContent || new Date().toISOString();
+
+                    const cleanDesc = description.replace(/<[^>]*>/g, '').substring(0, 300);
+
+                    articles.push({
+                        title: title,
+                        description: cleanDesc,
+                        url: link,
+                        source: feed.name,
+                        date: new Date(pubDate),
+                        type: 'rss'
+                    });
+                });
+
+                return articles;
+            } catch (error) {
+                console.error(`RSS fetch error for ${feed.name} via ${proxy.name}:`, error);
+                rotateProxy();
+                return [];
+            }
+        }
+
+        async function searchChunk() {
+            const chunk = document.getElementById('chunkInput').value.trim();
+            if (!chunk) {
+                alert('Please enter a chunk to search');
+                return;
+            }
+
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('Results').classList.remove('active');
+
+            try {
+                const allResults = [];
+
+                const feedPromises = RSS_FEEDS
+                    .filter(feed => feed.enabled)
+                    .map(async (feed) => {
+                        const articles = await fetchRSSFeed(feed);
+                        // Current simple matching; later replace with backend /api/chunks/search
+                        return articles.filter(article =>
+                            article.title.toLowerCase().includes(chunk.toLowerCase()) ||
+                            article.description.toLowerCase().includes(chunk.toLowerCase())
+                        );
+                    });
+
+                const resultsArrays = await Promise.all(feedPromises);
+                resultsArrays.forEach(articles => allResults.push(...articles));
+
+                allResults.sort((a, b) => b.date - a.date);
+
+                const uniqueResults = [];
+                const seenUrls = new Set();
+                allResults.forEach(result => {
+                    if (!seenUrls.has(result.url)) {
+                        seenUrls.add(result.url);
+                        uniqueResults.push(result);
+                    }
+                });
+
+                displayResults(uniqueResults, chunk);
+
+            } catch (error) {
+                console.error(error);
+                alert('Search failed. Please try again.');
+            } finally {
+                btn.disabled = false;
+                document.getElementById('loading').classList.remove('active');
+            }
+        }
+
+        function displayResults(results, chunk) {
+            const resultsDiv = document.getElementById('Results');
+            const resultsList = document.getElementById('ResultsList');
+            const statsDiv = document.getElementById('stats');
+
+            const enabledFeeds = RSS_FEEDS.filter(f => f.enabled).length;
+
+            statsDiv.innerHTML = `
+                <div class="Stat">
+                    <div class="Stat-value">${results.length}</div>
+                    <div class="Stat-label">Articles Found</div>
+                </div>
+                <div class="Stat">
+                    <div class="Stat-value">${enabledFeeds}</div>
+                    <div class="Stat-label">Active Sources</div>
+                </div>
+            `;
+
+            if (results.length === 0) {
+                resultsList.innerHTML = `
+                    <div class="Empty-state">
+                        <h3>No results found</h3>
+                        <p>Try a different chunk or enable more feeds</p>
+                    </div>
+                `;
+            } else {
+                resultsList.innerHTML = results.map(result => `
+                    <div class="Result-card">
+                        <div class="Result-header">
+                            <span class="Source-badge">${result.source}</span>
+                            <span class="Result-date">${result.date.toLocaleDateString()}</span>
+                        </div>
+                        <div class="Result-title">${highlightChunk(result.title, chunk)}</div>
+                        <div class="Result-text">${highlightChunk(result.description, chunk)}</div>
+                        <a href="${result.url}" target="_blank" class="Result-link">Read article →</a>
+                    </div>
+                `).join('');
+            }
+
+            resultsDiv.classList.add('active');
+        }
+
+        function configureUIMode() {
+            const addFeedForm = document.getElementById('addFeedForm');
+
+            if (isInStandaloneMode()) {
+                if (addFeedForm) addFeedForm.style.display = 'none';
+            } else {
+                if (addFeedForm) addFeedForm.style.display = 'flex';
+            }
+        }
+
+        // Initialize
+        renderFeedList();
+        configureUIMode();
+
+        document.getElementById('chunkInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') searchChunk();
+        });
+
+        // Service worker registration (required for PWA on GitHub Pages)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker
+                    .register('sw.js')
+                    .catch(console.error);
+            });
+        }
+    </script>
+</body>
+</html>
